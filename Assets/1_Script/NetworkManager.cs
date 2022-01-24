@@ -10,6 +10,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [SerializeField] InputField nicknameField = null;
     [SerializeField] GameObject disconnectPanel = null;
     [SerializeField] GameObject respawnPanel = null;
+    [SerializeField] GameObject player = null;
 
     private void Awake()
     {
@@ -19,6 +20,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     }
 
     // 버튼 클릭으로 실행
+    [ContextMenu("접속")]
     public void Connect() => PhotonNetwork.ConnectUsingSettings();
 
     // 접속하면 실행
@@ -32,10 +34,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         disconnectPanel.SetActive(false);
-        StartCoroutine(Co_JoinRoom()); 
+        PlayerSpawn();
+        StartCoroutine(Co_InTheRoom()); 
     }
 
-    IEnumerator Co_JoinRoom()
+    IEnumerator Co_InTheRoom()
     {
         while (true)
         {
@@ -46,6 +49,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             }
             yield return null;
         }
+    }
+
+    // respawn button에서도 사용
+    public void PlayerSpawn()
+    {
+        PhotonNetwork.Instantiate(player.name, Vector3.zero, Quaternion.identity);
+        respawnPanel.SetActive(false);
     }
 
     // 방에서 나가면 실행
