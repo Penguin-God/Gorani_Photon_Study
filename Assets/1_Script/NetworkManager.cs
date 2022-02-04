@@ -12,6 +12,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [SerializeField] GameObject respawnPanel = null;
     [SerializeField] GameObject player = null;
 
+    // 1. 클라이언트 마스터가 주요 작업 동기화하기
+    // 2. 총알 풀링하기
     private void Awake()
     {
         Screen.SetResolution(960, 540, false);
@@ -19,7 +21,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.SerializationRate = 30;
     }
 
-    // 버튼 클릭으로 실행
+    // UI 버튼 클릭으로 실행. ContextMenu는 테스트 편의를 위해서 추가함
     [ContextMenu("접속")]
     public void Connect() => PhotonNetwork.ConnectUsingSettings();
 
@@ -35,10 +37,25 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         disconnectPanel.SetActive(false);
         PlayerSpawn();
-        StartCoroutine(Co_InTheRoom()); 
+        StartCoroutine(Co_DestroyAllBullet());
+        StartCoroutine(Co_EscapeRoom());
     }
 
-    IEnumerator Co_InTheRoom()
+    // respawn button 클릭으로도 사용
+    public void PlayerSpawn()
+    {
+        PhotonNetwork.Instantiate(player.name, new Vector3(Random.Range(-6f, 15f), 3, 0), Quaternion.identity);
+        respawnPanel.SetActive(false);
+    }
+
+    IEnumerator Co_DestroyAllBullet()
+    {
+        yield return new WaitForSeconds(0.2f);
+        foreach (GameObject _bullet in GameObject.FindGameObjectsWithTag("Bullet")) _bullet.GetComponent<PhotonView>().RPC("RPC_Destory", RpcTarget.All);
+    }
+
+    // 방안에 있을때
+    IEnumerator Co_EscapeRoom()
     {
         while (true)
         {
@@ -49,13 +66,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             }
             yield return null;
         }
-    }
-
-    // respawn button에서도 사용
-    public void PlayerSpawn()
-    {
-        PhotonNetwork.Instantiate(player.name, Vector3.zero, Quaternion.identity);
-        respawnPanel.SetActive(false);
     }
 
     // 방에서 나가면 실행

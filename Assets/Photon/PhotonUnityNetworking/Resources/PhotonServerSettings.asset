@@ -41,6 +41,7 @@ MonoBehaviour:
   - RespawnSpaceship
   - FlipX
   - JumpRPC
+  - RPC_Destory
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
