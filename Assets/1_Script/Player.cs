@@ -6,7 +6,7 @@ using Cinemachine;
 using Photon.Pun;
 using Photon.Realtime;
 
-public class Player : MonoBehaviourPunCallbacks, IPunObservable
+public class Player : MonoBehaviourPun, IPunObservable
 {
     private Animator animator;
     private Rigidbody2D RB;
@@ -26,7 +26,7 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
         PV = GetComponent<PhotonView>();
         currentPos = transform.position;
 
-        // PV.Owner : Æ÷Åæ ºäÀÇ ÁÖÀÎ (PV.IsMineÀÌ trueÀº Player)
+        // PV.Owner : í¬í†¤ ë·°ì˜ ì£¼ì¸ (PV.IsMineì´ trueì€ Player)
         nicknameText.text = (PV.IsMine) ? PhotonNetwork.NickName : PV.Owner.NickName;
         nicknameText.color = (PV.IsMine) ? Color.green : Color.red;
 
@@ -54,19 +54,19 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     void Move()
     {
         axis = Input.GetAxisRaw("Horizontal");
-        // Áß·ÂÀÌ ÀÖÀ¸¹Ç·Î y´Â ÇöÀç °ª ±×´ë·Î Àû¿ë
+        // ì¤‘ë ¥ì´ ìˆìœ¼ë¯€ë¡œ yëŠ” í˜„ì¬ ê°’ ê·¸ëŒ€ë¡œ ì ìš©
         RB.velocity = new Vector2(speed * axis, RB.velocity.y);
 
         if (axis != 0)
         {
             animator.SetBool("IsWalk", true);
-            // AllBuffered : ÇöÀç ¹æ¿¡ ÀÖ´Â ÇÃ·¹ÀÌ¾î´Â ¹°·Ğ ÈÄ¿¡ »õ·Î µé¾î¿À´Â ÇÃ·¹ÀÌ¾îµµ ½ÇÇàÇÔ
+            // AllBuffered : í˜„ì¬ ë°©ì— ìˆëŠ” í”Œë ˆì´ì–´ëŠ” ë¬¼ë¡  í›„ì— ìƒˆë¡œ ë“¤ì–´ì˜¤ëŠ” í”Œë ˆì´ì–´ë„ ì‹¤í–‰í•¨
             PV.RPC("FlipX", RpcTarget.AllBuffered, axis);
         }
         else animator.SetBool("IsWalk", false);
     }
 
-    // Àü¿ª º¯¼ö axis´Â µ¿±âÈ­µÇ°í ÀÖÁö ¾ÊÀ¸¹Ç·Î ÀÎÀÚ°ªÀ¸·Î ¹æÇâ°ªÀ» ¹ŞÀ½
+    // ì „ì—­ ë³€ìˆ˜ axisëŠ” ë™ê¸°í™”ë˜ê³  ìˆì§€ ì•Šìœ¼ë¯€ë¡œ ì¸ìê°’ìœ¼ë¡œ ë°©í–¥ê°’ì„ ë°›ìŒ
     [PunRPC]
     void FlipX(float _axis) => SR.flipX = (_axis == -1);
 
@@ -74,7 +74,7 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     [SerializeField] bool isGround = false;
     void Jump()
     {
-        // ÁöÁ¤ÇÑ À§Ä¡¿¡ ¿øÀ» ±×·Á¼­ Ãæµ¹À» °¨ÁöÇÔ
+        // ì§€ì •í•œ ìœ„ì¹˜ì— ì›ì„ ê·¸ë ¤ì„œ ì¶©ëŒì„ ê°ì§€í•¨
         isGround = Physics2D.OverlapCircle((Vector2)transform.position - (Vector2.up * 0.5f), 0.07f, 1 << LayerMask.NameToLayer("Ground"));
         animator.SetBool("IsJump", !isGround);
         if(Input.GetKeyDown(KeyCode.Space) && isGround) PV.RPC("JumpRPC", RpcTarget.AllBuffered);
@@ -83,23 +83,38 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     [PunRPC]
     void JumpRPC()
     {
-        RB.velocity = Vector2.zero; // AddForceÀÇ È¿°ú¸¦ ´õ Àß ¹Ş°Ô ÇÏ±â À§ÇØ Á÷Àü¿¡ ¸ØÃã
+        RB.velocity = Vector2.zero; // AddForceì˜ íš¨ê³¼ë¥¼ ë” ì˜ ë°›ê²Œ í•˜ê¸° ìœ„í•´ ì§ì „ì— ë©ˆì¶¤
         RB.AddForce(Vector2.up * 700);
     }
 
 
-    // SR.flipX °¡ true¸é ¹İ´ëÂÊ ¹Ù¶óº¸´Â Áß
+    // SR.flipX ê°€ trueë©´ ë°˜ëŒ€ìª½ ë°”ë¼ë³´ëŠ” ì¤‘
     Vector3 ShotDir => transform.position + new Vector3(SR.flipX ? -0.4f : 0.4f, -0.11f, 0); 
     void Shot()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            GameObject _bullet = PhotonNetwork.Instantiate("Bullet", ShotDir, Quaternion.identity);
-            _bullet.GetComponent<MyBullet>().Shot(SR.flipX ? -1 : 1);
+            PV.RPC("RPC_Shot", RpcTarget.MasterClient, ShotDir, SR.flipX ? -1 : 1);
             animator.SetTrigger("Shot");
         }
     }
 
+    [PunRPC]
+    void RPC_Shot(Vector3 _pos, int _dir)
+    {
+        MyBullet _bullet = ObjectPool.GetBullet();
+        _bullet.photonView.RPC("Shot", RpcTarget.AllBuffered, _pos, _dir);
+    }
+
+    //[PunRPC] 
+    //void ShotEffect(Object _object, Vector3 _pos, bool _isFlip)
+    //{
+        
+    //    _bullet.transform.position = _pos;
+    //    _bullet.Shot(_isFlip ? -1 : 1);
+    //}
+
+    // ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ì—ì„œë§Œ ì—°ì‚°í•˜ê¸°
     public void OnDamage()
     {
         hpImage.fillAmount -= 0.1f;
@@ -109,11 +124,11 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     void Die()
     {
         GameObject.Find("Canvas").transform.Find("Respawn Panel").gameObject.SetActive(true);
-        PhotonNetwork.Destroy(gameObject);
+        PhotonNetwork.Destroy(gameObject); // íŒŒê´´í•˜ì§€ ë§ê³  ê»ë‹¤ í‚¤ëŠ” ì²˜ë¦¬ë¡œ
     }
 
-    // º¯¼ö µ¿±âÈ­
-    // µ¿±âÈ­ ¸ñ·Ï : 
+    // ë³€ìˆ˜ ë™ê¸°í™”
+    // ë™ê¸°í™” ëª©ë¡ : ìœ„ì¹˜
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)
@@ -129,11 +144,11 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     }
 
 
-    // °Å¸®°¡ 10ÀÌ ³ÑÀ¸¸é Áï½Ã ¼ø°£ÀÌµ¿½ÃÅ°°í ±×·¸Áö ¾Ê´Ù¸é LerpÇÔ¼ö¸¦ ÅëÇØ ºÎµå·´°Ô À§Ä¡ µ¿±âÈ­ÇÏ´Â ÇÔ¼ö
-    // ÀÌ ÇÔ¼ö´Â stream.IsWritingÀÌ falseÀÎ »ó´ë ¿ÀºêÁ§Æ®ÀÇ µ¿±âÈ­¸¦ ¹Ş´Â ÂÊ¿¡¼­ ½ÇÇàµÇ±â ¶§¹®¿¡ RPC´Â ÇÊ¿ä°¡ ¾øÀ½
+    // ê±°ë¦¬ê°€ 10ì´ ë„˜ìœ¼ë©´ ì¦‰ì‹œ ìˆœê°„ì´ë™ì‹œí‚¤ê³  ê·¸ë ‡ì§€ ì•Šë‹¤ë©´ Lerpí•¨ìˆ˜ë¥¼ í†µí•´ ë¶€ë“œëŸ½ê²Œ ìœ„ì¹˜ ë™ê¸°í™”í•˜ëŠ” í•¨ìˆ˜
+    // ì´ í•¨ìˆ˜ëŠ” stream.IsWritingì´ falseì¸ ìƒëŒ€ ì˜¤ë¸Œì íŠ¸ì˜ ë™ê¸°í™”ë¥¼ ë°›ëŠ” ìª½ì—ì„œ ì‹¤í–‰ë˜ê¸° ë•Œë¬¸ì— RPCëŠ” í•„ìš”ê°€ ì—†ìŒ
     void SyncedPosition()
     {
-        // sqrMagnitude : ¹éÅÍÀÇ Å©±âÀÇ Á¦°öÀ» ±¸ÇÔ. ±×³É Å©±â¸¦ ±¸ÇÏ´Â °Íº¸´Ù ºü¸§(¹éÅÍÀÇ °Å¸®¸¦ ±¸ÇÏ´Â °úÁ¤¿¡¼­ Á¦°ö±ÙÀ» ±¸ÇØ¾ß ÇÏ´Âµ¥ ÀÌ¸¦ »ı·«ÇÏ¹Ç·Î)
+        // sqrMagnitude : ë°±í„°ì˜ í¬ê¸°ì˜ ì œê³±ì„ êµ¬í•¨. ê·¸ëƒ¥ í¬ê¸°ë¥¼ êµ¬í•˜ëŠ” ê²ƒë³´ë‹¤ ë¹ ë¦„(ë°±í„°ì˜ ê±°ë¦¬ë¥¼ êµ¬í•˜ëŠ” ê³¼ì •ì—ì„œ ì œê³±ê·¼ì„ êµ¬í•´ì•¼ í•˜ëŠ”ë° ì´ë¥¼ ìƒëµí•˜ë¯€ë¡œ)
         if ((transform.position - currentPos).sqrMagnitude <= 100) transform.position = currentPos;
         else transform.position = Vector3.Lerp(transform.position, currentPos, Time.deltaTime * 10);
     }

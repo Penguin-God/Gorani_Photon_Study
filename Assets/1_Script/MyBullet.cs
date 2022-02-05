@@ -4,9 +4,9 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 
-public class MyBullet : MonoBehaviourPunCallbacks
+public class MyBullet : MonoBehaviourPun
 {
-    void Start() => StartCoroutine("Co_Destory");
+    void Start() => gameObject.SetActive(false);
 
     IEnumerator Co_Destory()
     {
@@ -14,16 +14,20 @@ public class MyBullet : MonoBehaviourPunCallbacks
 
         yield return new WaitForSeconds(3.5f);
         StopCoroutine(shotCoroutine);
-        PhotonNetwork.Destroy(gameObject);
+        ReturnPool();
     }
 
 
     Coroutine shotCoroutine = null;
     [SerializeField] float speed;
-    public void Shot(int _dir) => shotCoroutine = StartCoroutine(Co_Shot(_dir));
 
-    IEnumerator Co_Shot(int _dir)
+    [PunRPC]
+    public void Shot(Vector3 _startPos, int _dir) => shotCoroutine = StartCoroutine(Co_Shot(_startPos, _dir));
+
+    IEnumerator Co_Shot(Vector3 _startPos, int _dir)
     {
+        transform.position = _startPos;
+        StartCoroutine("Co_Destory");
         while (true)
         {
             transform.Translate(Vector3.right * Time.deltaTime * speed * _dir);
@@ -33,25 +37,29 @@ public class MyBullet : MonoBehaviourPunCallbacks
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.tag == "Ground") DestroyMy();
+        if (collision.tag == "Ground") ReturnPool();
 
-        // ÃÑ¾ËÀº »ó´ë¹æÀÌ ½ğ °Å°í ³»°¡ ¸Â¾ÒÀ» ¶§. Áï,  »ó´ë¹æÀÌ ½ğ ÃÑ¾ËÀÌÁö¸¸ °è»êÀº µ¿±âÈ­´Â ¸ÂÀº ÂÊ¿¡¼­ ÇÔ. ÀÌÀ¯´Â ½ğ ÂÊº¸´Ù ¸ÂÀº ÂÊÀÌ »ìÂ¦ ´À¸®±â ¶§¹®
-        if (collision.tag == "Player" && !photonView.IsMine && collision.GetComponent<PhotonView>().IsMine)
+        // ëŒ€ë¯¸ì§€ ì—°ì‚°ì€ ë°©ì¥ë§Œ
+        if (collision.tag == "Player" && !collision.GetComponent<PhotonView>().IsMine)
         {
-            collision.GetComponent<Player>().OnDamage();
-            DestroyMy();
+            collision.GetComponent<Player>().OnDamage(); // ë§ˆìŠ¤í„° í´ë¼ë¡œ ë°”ê¾¸ê¸°
+            ReturnPool();
         }
     }
 
-    void DestroyMy()
+    void ReturnPool()
     {
         StopAllCoroutines();
-        photonView.RPC("RPC_Destory", RpcTarget.AllBuffered);
+        gameObject.SetActive(false);
+        transform.position = new Vector3(500, 500, 500);
+        if(PhotonNetwork.IsMasterClient) ObjectPool.ReturnBullet(this);
     }
 
     [PunRPC]
-    void RPC_Destory()
+    public void SetActive(bool _active)
     {
-        Destroy(gameObject);
+        // í•œë²ˆ ìƒì„±ëœ í›„ ì„¸ìƒêµ¬ê²½í•´ë³¸ ì• ë“¤ì´ ìŠ¤ìŠ¤ë¡œ ê»ë‹¤í‚¤ê¸° ê°€ëŠ¥
+        // ì´ì•Œ ìœ„ì¹˜ ë™ê¸°í™”í•˜ê¸°
+        gameObject.SetActive(_active);
     }
 }

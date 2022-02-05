@@ -38,10 +38,16 @@ MonoBehaviour:
   - DestroyRpc
   - DestroySpaceship
   - Fire
-  - RespawnSpaceship
   - FlipX
   - JumpRPC
+  - RespawnSpaceship
   - RPC_Destory
+  - RPC_Return
+  - RPC_Shot
+  - ShotEffect
+  - Shot
+  - SetActive
+  - SetActives
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

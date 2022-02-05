@@ -12,8 +12,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [SerializeField] GameObject respawnPanel = null;
     [SerializeField] GameObject player = null;
 
-    // 1. Å¬¶óÀÌ¾ğÆ® ¸¶½ºÅÍ°¡ ÁÖ¿ä ÀÛ¾÷ µ¿±âÈ­ÇÏ±â
-    // 2. ÃÑ¾Ë Ç®¸µÇÏ±â
+    // 1. í´ë¼ì´ì–¸íŠ¸ ë§ˆìŠ¤í„°ê°€ ì£¼ìš” ì‘ì—… ë™ê¸°í™”í•˜ê¸°
+    // 2. ì´ì•Œ í’€ë§í•˜ê¸°
+    // 3. ë§¤ì¹­ ì‹œìŠ¤í…œ ë§Œë“¤ê¸°
+
     private void Awake()
     {
         Screen.SetResolution(960, 540, false);
@@ -21,27 +23,29 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.SerializationRate = 30;
     }
 
-    // UI ¹öÆ° Å¬¸¯À¸·Î ½ÇÇà. ContextMenu´Â Å×½ºÆ® ÆíÀÇ¸¦ À§ÇØ¼­ Ãß°¡ÇÔ
-    [ContextMenu("Á¢¼Ó")]
+    // UI ë²„íŠ¼ í´ë¦­ìœ¼ë¡œ ì‹¤í–‰. ContextMenuëŠ” í…ŒìŠ¤íŠ¸ í¸ì˜ë¥¼ ìœ„í•´ì„œ ì¶”ê°€í•¨
+    [ContextMenu("ì ‘ì†")]
     public void Connect() => PhotonNetwork.ConnectUsingSettings();
 
-    // Á¢¼ÓÇÏ¸é ½ÇÇà
+    // ì ‘ì†í•˜ë©´ ì‹¤í–‰
     public override void OnConnectedToMaster()
     {
         PhotonNetwork.LocalPlayer.NickName = nicknameField.text;
         PhotonNetwork.JoinOrCreateRoom("Room", new RoomOptions { MaxPlayers = 2 }, null);
     }
 
-    // ¹æ¿¡ Á¢¼ÓÇÏ¸é ½ÇÇà
+    // ë°©ì— ì ‘ì†í•˜ë©´ ì‹¤í–‰
+    public event System.Action OnJoinRoomEvent = null;
     public override void OnJoinedRoom()
     {
         disconnectPanel.SetActive(false);
         PlayerSpawn();
         StartCoroutine(Co_DestroyAllBullet());
         StartCoroutine(Co_EscapeRoom());
+        if (OnJoinRoomEvent != null) OnJoinRoomEvent();
     }
 
-    // respawn button Å¬¸¯À¸·Îµµ »ç¿ë
+    // respawn button í´ë¦­ìœ¼ë¡œë„ ì‚¬ìš©
     public void PlayerSpawn()
     {
         PhotonNetwork.Instantiate(player.name, new Vector3(Random.Range(-6f, 15f), 3, 0), Quaternion.identity);
@@ -54,7 +58,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         foreach (GameObject _bullet in GameObject.FindGameObjectsWithTag("Bullet")) _bullet.GetComponent<PhotonView>().RPC("RPC_Destory", RpcTarget.All);
     }
 
-    // ¹æ¾È¿¡ ÀÖÀ»¶§
+    // ë°©ì•ˆì— ìˆì„ë•Œ ë°© ë‚˜ê°€ê¸°
     IEnumerator Co_EscapeRoom()
     {
         while (true)
@@ -68,7 +72,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         }
     }
 
-    // ¹æ¿¡¼­ ³ª°¡¸é ½ÇÇà
+    // ë°©ì—ì„œ ë‚˜ê°€ë©´ ì‹¤í–‰
     public override void OnDisconnected(DisconnectCause cause)
     {
         disconnectPanel.SetActive(true);
