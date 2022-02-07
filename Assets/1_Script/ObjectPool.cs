@@ -61,6 +61,7 @@ public class ObjectPool : MonoBehaviourPun
 
     public static void ReturnBullet(MyBullet _bullet)
     {
+        _bullet.photonView.RPC("SetActive", RpcTarget.All, false);
         Instance.BulletQueue.Enqueue(_bullet);
     }
 }

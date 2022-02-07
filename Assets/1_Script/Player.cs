@@ -8,6 +8,8 @@ using Photon.Realtime;
 
 public class Player : MonoBehaviourPun, IPunObservable
 {
+    public int id = -1;
+
     private Animator animator;
     private Rigidbody2D RB;
     private SpriteRenderer SR;
@@ -94,16 +96,16 @@ public class Player : MonoBehaviourPun, IPunObservable
     {
         if (Input.GetMouseButtonDown(0))
         {
-            PV.RPC("RPC_Shot", RpcTarget.MasterClient, ShotDir, SR.flipX ? -1 : 1);
+            PV.RPC("ShotOnMaster", RpcTarget.MasterClient, ShotDir, SR.flipX ? -1 : 1);
             animator.SetTrigger("Shot");
         }
     }
 
     [PunRPC]
-    void RPC_Shot(Vector3 _pos, int _dir)
+    void ShotOnMaster(Vector3 _pos, int _dir)
     {
         MyBullet _bullet = ObjectPool.GetBullet();
-        _bullet.photonView.RPC("Shot", RpcTarget.AllBuffered, _pos, _dir);
+        _bullet.photonView.RPC("Shot", RpcTarget.AllBuffered, _pos, _dir, id);
     }
 
     //[PunRPC] 
@@ -114,17 +116,41 @@ public class Player : MonoBehaviourPun, IPunObservable
     //    _bullet.Shot(_isFlip ? -1 : 1);
     //}
 
-    // 마스터 클라이언트에서만 연산하기
+
+
+    // 마스터 클라이언트에서만 체력 연산하기
+    [PunRPC]
     public void OnDamage()
     {
-        hpImage.fillAmount -= 0.1f;
+        if (PhotonNetwork.IsMasterClient)
+        {
+            hpImage.fillAmount -= 0.1f; // 마스터 클라 서버의 오브젝트의 체력을 줄이는 거니까 getcomponent 필요 없음
+            PV.RPC("UpdateHealthMasterToClient", RpcTarget.Others, hpImage.fillAmount);
+            PV.RPC("OnDamage", RpcTarget.Others);
+        }
+
         if (hpImage.fillAmount <= 0) Die();
     }
 
     void Die()
     {
-        GameObject.Find("Canvas").transform.Find("Respawn Panel").gameObject.SetActive(true);
-        PhotonNetwork.Destroy(gameObject); // 파괴하지 말고 껏다 키는 처리로
+        // 리스폰 창은 죽은 플레이어 화면에만 뛰우기
+        if(PV.IsMine) GameObject.Find("Canvas").transform.Find("Respawn Panel").gameObject.SetActive(true);
+        gameObject.SetActive(false);
+    }
+
+    [PunRPC]
+    void UpdateHealthMasterToClient(float _hp)
+    {
+        hpImage.fillAmount = _hp;
+    }
+
+    // 여기 Rpc로 바꾸기
+    public void Respawn()
+    {
+        hpImage.fillAmount = 1f;
+        gameObject.SetActive(true);
+        transform.position = new Vector3(Random.Range(-6f, 15f), 3, 0);
     }
 
     // 변수 동기화

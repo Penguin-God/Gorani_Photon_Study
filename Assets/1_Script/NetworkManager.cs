@@ -11,7 +11,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [SerializeField] GameObject disconnectPanel = null;
     [SerializeField] GameObject respawnPanel = null;
     [SerializeField] GameObject player = null;
-
+    [SerializeField] Button respawnButton = null;
     // 1. 클라이언트 마스터가 주요 작업 동기화하기
     // 2. 총알 풀링하기
     // 3. 매칭 시스템 만들기
@@ -45,12 +45,21 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         if (OnJoinRoomEvent != null) OnJoinRoomEvent();
     }
 
-    // respawn button 클릭으로도 사용
+    int id = 0;
     public void PlayerSpawn()
     {
-        PhotonNetwork.Instantiate(player.name, new Vector3(Random.Range(-6f, 15f), 3, 0), Quaternion.identity);
-        respawnPanel.SetActive(false);
+        Player _newPlayer = PhotonNetwork.Instantiate(player.name, new Vector3(Random.Range(-6f, 15f), 3, 0), Quaternion.identity).GetComponent<Player>();
+        _newPlayer.id = ++id;
+        photonView.RPC("UpdateId", RpcTarget.OthersBuffered, id);
+        respawnButton.onClick.AddListener(() => _newPlayer.Respawn());
     }
+
+    [PunRPC]
+    void UpdateId(int _id)
+    {
+        id = _id;
+    }
+
 
     IEnumerator Co_DestroyAllBullet()
     {

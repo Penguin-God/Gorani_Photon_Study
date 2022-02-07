@@ -48,6 +48,12 @@ MonoBehaviour:
   - Shot
   - SetActive
   - SetActives
+  - ShotOnMaster
+  - OnDamage
+  - UpdateHealthMasterToClient
+  - SetId
+  - UpdateId
+  - MyPlayerRespawn
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -1991,10 +1991,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1356601461}
-        m_TargetAssemblyTypeName: NetworkManager, Assembly-CSharp
-        m_MethodName: PlayerSpawn
-        m_Mode: 1
+      - m_Target: {fileID: 1098351785}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -2669,6 +2669,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1356601460}
   - component: {fileID: 1356601461}
+  - component: {fileID: 1356601462}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -2706,6 +2707,29 @@ MonoBehaviour:
   disconnectPanel: {fileID: 1550552666}
   respawnPanel: {fileID: 1098351785}
   player: {fileID: 6285085887489474029, guid: 786bc81eaa697204c9a421d0572f9599, type: 3}
+  respawnButton: {fileID: 393495515}
+--- !u!114 &1356601462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1356601459}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 1
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1550552666
 GameObject:
   m_ObjectHideFlags: 0
@@ -2814,6 +2838,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   networkManager: {fileID: 1356601461}
   bullet: {fileID: 834993761940336575, guid: 771b5b56803e51f40ab40c70984804d6, type: 3}
+  test: 0
 --- !u!4 &1566781118
 Transform:
   m_ObjectHideFlags: 0

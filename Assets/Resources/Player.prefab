@@ -226,6 +226,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e14bd167da077cd4fa0bf24496224d78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  id: -1
   nicknameText: {fileID: 6285085887932621935}
   hpImage: {fileID: 6285085888829592756}
   currentPos: {x: 0, y: 0, z: 0}
