@@ -25,7 +25,7 @@ public class MyBullet : MonoBehaviourPun//, IPunObservable
     [SerializeField] float speed;
 
     [PunRPC]
-    public void Shot(Vector3 _startPos, int _dir, int _playerId)
+    void Shot(Vector3 _startPos, int _dir, int _playerId)
     {
         transform.position = _startPos;
         //currentPos = transform.position;
@@ -60,7 +60,7 @@ public class MyBullet : MonoBehaviourPun//, IPunObservable
     void ReturnPool() => ObjectPool.ReturnBullet(this);
 
     [PunRPC]
-    public void SetActive(bool _active)
+    void SetActive(bool _active)
     {
         // 한번 생성된 후 세상구경해본 애들이 스스로 껏다키기 가능
         if (_active) gameObject.SetActive(true);
@@ -72,18 +72,4 @@ public class MyBullet : MonoBehaviourPun//, IPunObservable
             currentShotPlayerId = -3;
         }
     }
-
-    //[SerializeField] Vector3 currentPos;
-    //public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-    //{
-    //    if (stream.IsWriting)
-    //    {
-    //        stream.SendNext(currentPos);
-    //    }
-    //    else
-    //    {
-    //        currentPos = (Vector3)stream.ReceiveNext();
-    //        transform.position = currentPos;
-    //    }
-    //}
 }
