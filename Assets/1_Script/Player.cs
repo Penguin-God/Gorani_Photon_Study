@@ -108,16 +108,6 @@ public class Player : MonoBehaviourPun, IPunObservable
         _bullet.photonView.RPC("Shot", RpcTarget.AllBuffered, _pos, _dir, id);
     }
 
-    //[PunRPC] 
-    //void ShotEffect(Object _object, Vector3 _pos, bool _isFlip)
-    //{
-        
-    //    _bullet.transform.position = _pos;
-    //    _bullet.Shot(_isFlip ? -1 : 1);
-    //}
-
-
-
     // 마스터 클라이언트에서만 체력 연산하기
     [PunRPC]
     public void OnDamage()
@@ -144,13 +134,18 @@ public class Player : MonoBehaviourPun, IPunObservable
     {
         hpImage.fillAmount = _hp;
     }
-
-    // 여기 Rpc로 바꾸기
+    
     public void Respawn()
     {
-        hpImage.fillAmount = 1f;
-        gameObject.SetActive(true);
         transform.position = new Vector3(Random.Range(-6f, 15f), 3, 0);
+        PV.RPC("RPCRespawn", RpcTarget.All);
+    }
+
+    [PunRPC]
+    void RPCRespawn()
+    {
+        gameObject.SetActive(true);
+        hpImage.fillAmount = 1f;
     }
 
     // 변수 동기화
